@@ -1,0 +1,82 @@
+{
+  "generated_from": {
+    "release_tag": "release-v1",
+    "release_commit": "0c5237d983d18e35d406f25172bcb740d014d41d",
+    "prereg_tag": "prereg-v1",
+    "prereg_commit": "c2af8eed5a2d306729995ce7b52fcf8761c1121c"
+  },
+  "note": "Hashes of the PQL-001 artifacts read (paths relative to the PQL-001 repository root). Methodology copies are byte-identical to the sealed originals.",
+  "artifacts": {
+    "results/data/quality_report.json": {
+      "sha256": "8a1f8e9d391be0a793b70a9924f49bf6c95c198d7ef74d04662982d772577d13",
+      "verified_by": "evidence/HASHES.sha256"
+    },
+    "results/theory/baseline.json": {
+      "sha256": "303fcb6c779dc7f3b974aef8761d33adc328c25aa46ca49566ec9b1994a57e52",
+      "verified_by": "evidence/HASHES.sha256"
+    },
+    "results/power/power_full.json": {
+      "sha256": "9af4788535b4a4ad296d82a342d1979058ffcc556229787e4b5b551e56d7c69d",
+      "verified_by": "evidence/HASHES.sha256"
+    },
+    "results/stats/confirmatory_full.json": {
+      "sha256": "bb9777719129d264716a4ec50f077873b928c2894c67aea9186c0a78528661cd",
+      "verified_by": "evidence/HASHES.sha256"
+    },
+    "results/injection/injection_full.json": {
+      "sha256": "ea12b411d4976931235e5133463381f09808ae5a1940b3e4d830266d7f194ba1",
+      "verified_by": "evidence/HASHES.sha256"
+    },
+    "results/backtest/backtest_full.json": {
+      "sha256": "79a3c722c886c4d51524813ae437bdd4e83577d1634126bc9582ef231c82213b",
+      "verified_by": "evidence/HASHES.sha256"
+    },
+    "results/exploratory/exploratory_selection_period.json": {
+      "sha256": "7403c5a29b0a2459e077832f2c044dc14bd62152b954425c797e2518d06baeaf",
+      "verified_by": "evidence/HASHES.sha256"
+    },
+    "results/econ/ev_scenarios.json": {
+      "sha256": "5e187b121573b0d0a367bbb5e4bd95334ffc8e59d5cd9d4efb470abb948bfe3f",
+      "verified_by": "evidence/HASHES.sha256"
+    },
+    "results/prereg/prereg_check.json": {
+      "sha256": "ad221d5ffbdd4e8117c8d59abfb895b4bdcc4016955448136237306cc74f7e89",
+      "verified_by": "evidence/HASHES.sha256"
+    },
+    "evidence/gate_results.json": {
+      "sha256": "c080d5d83102e92699bd5ad6bbe6438acd292974722d640aa4aa0788b0254471",
+      "verified_by": "git object at release-v1"
+    },
+    "PREREGISTRATION.md": {
+      "sha256": "adf2a27aab7ca106cf3fab3d66cab7c768fc1c9203105bc9289d6bccb057e4c1",
+      "verified_by": "evidence/HASHES.sha256"
+    },
+    "hypotheses.yaml": {
+      "sha256": "787c6b0e0d906b2052f69a36a462759340890716a95ef1008e1bc38f7ef73cb1",
+      "verified_by": "evidence/HASHES.sha256"
+    },
+    "DEVIATIONS.md": {
+      "sha256": "8d268b6393c1b9dafd59c4567b043eea1334876d4ff55a622792cbd1ef4ef81b",
+      "verified_by": "git object at release-v1"
+    },
+    "reports/GO_NO_GO.md": {
+      "sha256": "584a1476d68ada23b034ed02d09af70bc3451dc03a36277fc4891c779ed31f5f",
+      "verified_by": "evidence/HASHES.sha256"
+    },
+    "reports/POWER_ANALYSIS.md": {
+      "sha256": "ff80f6212ce5257e5c6f3e8166ce6d7df6daa5a892c01c594344d98ee4ac43f2",
+      "verified_by": "evidence/HASHES.sha256"
+    },
+    "results/prospective/prospective_registry.jsonl": {
+      "sha256": "58d7692941037bd0c14ff77ce37315bc29356c69c418125c13e79b276aa82e88",
+      "verified_by": "git object at release-v1"
+    }
+  },
+  "methodology_copies": {
+    "methodology/PREREGISTRATION.md": "adf2a27aab7ca106cf3fab3d66cab7c768fc1c9203105bc9289d6bccb057e4c1",
+    "methodology/hypotheses.yaml": "787c6b0e0d906b2052f69a36a462759340890716a95ef1008e1bc38f7ef73cb1",
+    "methodology/DEVIATIONS.md": "8d268b6393c1b9dafd59c4567b043eea1334876d4ff55a622792cbd1ef4ef81b",
+    "methodology/GO_NO_GO.md": "584a1476d68ada23b034ed02d09af70bc3451dc03a36277fc4891c779ed31f5f",
+    "methodology/POWER_ANALYSIS.md": "ff80f6212ce5257e5c6f3e8166ce6d7df6daa5a892c01c594344d98ee4ac43f2"
+  }
+}

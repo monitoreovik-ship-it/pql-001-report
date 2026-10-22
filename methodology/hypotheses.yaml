@@ -1,0 +1,129 @@
+# PQL-001 preregistered hypotheses and analysis plan (machine-readable). Frozen by git tag prereg-v1.
+# Any post-freeze change is EXPLORATORY and must be logged in DEVIATIONS.md.
+version: 1
+mission_id: PQL-001
+status: FROZEN_AT_TAG_prereg-v1
+
+data:
+  snapshot_id: "20261022T124042Z"
+  curated_file: data/curated/draws.parquet
+  curated_sha256: "10be5eae0f01d6cda3581a570a84ef1eb615e0ce590e05d6888b6f5dc65b9b77"
+  rule_era: ERA_2015_69_26        # only the current matrix is confirmatory
+  eligible: "rule_era == ERA_2015_69_26 AND no blocking quality flag AND verified_official"
+  first_draw: "2015-10-07"
+  cutoff_draw: "2026-10-21"       # last draw in the frozen snapshot (inclusive)
+  expected_n: 1423
+  exclusions: "rows with blocking quality flags (none present at freeze); older eras audit-only"
+  missing_data: "no imputation; a missing draw is excluded and listed (none present at freeze)"
+  schema_version: 1
+
+null_model:
+  description: "Each draw: 5 distinct whites uniformly without replacement from 1..69; red uniform 1..26; draws independent."
+  w_max: 69
+  r_max: 26
+  k: 5
+
+alpha:
+  experimentwise: 0.05
+  allocation: {F1_GLOBAL: 0.02, F2_WHITE_BALLS: 0.01, F3_RED_BALLS: 0.01, F4_PREDICTIVE: 0.01}
+  rule: "Bonferroni split of 0.05 across families; Holm step-down within each family (primary). BH-FDR q=0.05 over F2∪F3 is SECONDARY, labelled as such."
+
+monte_carlo:
+  seeds: {null_reference: 1001, pilot_expectations: 1002, fpr_calibration: 1003, power: 1004, injection: 1005, backtest_null: 1006, bootstrap: 1007}
+  profiles:
+    full:  {null_reference_B: 100000, pilot_B: 5000, fpr_histories: 10000, power_histories: 1000, injection_histories: 1000, backtest_null_histories: 1000, bootstrap_B: 5000}
+    smoke: {null_reference_B: 600,   pilot_B: 300,  fpr_histories: 300,  power_histories: 40,  injection_histories: 40,  backtest_null_histories: 40,   bootstrap_B: 300}
+  pvalue_estimator: "(1 + #{T_null >= T_obs}) / (B + 1), upper tail"
+  smoke_is_confirmatory: false
+
+families:
+  F1_GLOBAL:
+    correction: holm
+    tests:
+      - {id: G1_WHITE_FREQ, statistic: "Pearson sum over 69 white counts vs n*5/69", tail: upper, calibration: joint_mc}
+      - {id: G2_RED_FREQ, statistic: "Pearson sum over 26 red counts vs n/26", tail: upper, calibration: joint_mc, secondary_report: "asymptotic chi2(25)"}
+      - {id: G3_WHITE_OVERLAP_LAGS, statistic: "sum_{l=1..5} z_l^2, z_l=(mean|S_t∩S_t-l| - 25/69)/sd_l", lags: [1, 2, 3, 4, 5], tail: upper, calibration: joint_mc}
+      - {id: G4_RED_REPEAT_LAGS, statistic: "sum_{l=1..5} z_l^2 of red repeat rates vs 1/26", lags: [1, 2, 3, 4, 5], tail: upper, calibration: joint_mc}
+      - {id: G5_SUM_LJUNG_BOX, statistic: "Ljung-Box Q on white-sum series, lags 1..10", max_lag: 10, tail: upper, calibration: joint_mc}
+      - {id: G6_WHITE_INDICATOR_AUTOCORR, statistic: "sum_{l in 1,2} (n-l) sum_i r_{l,i}^2 of per-ball 0/1 series (known mean 5/69)", lags: [1, 2], tail: upper, calibration: joint_mc}
+      - {id: G7_WHITE_GAPS, statistic: "Pearson distance of pooled completed white gaps (bins 1..60,>60) to pilot-null proportions", max_bin: 60, tail: upper, calibration: joint_mc, note: "discrete waiting times; no continuous KS"}
+      - {id: G8_RED_GAPS, statistic: "same for red gaps (bins 1..100,>100)", max_bin: 100, tail: upper, calibration: joint_mc}
+      - {id: G9_WHITE_HOMOGENEITY, statistic: "pooled-margin homogeneity across 4 consecutive near-equal blocks (69x4)", blocks: 4, tail: upper, calibration: joint_mc}
+      - {id: G10_RED_HOMOGENEITY, statistic: "pooled-margin homogeneity across 4 blocks (26x4)", blocks: 4, tail: upper, calibration: joint_mc}
+      - {id: G11_WHITE_PAIRS, statistic: "Pearson sum over 2346 pair co-occurrence counts vs n*20/(69*68)", tail: upper, calibration: joint_mc}
+  F2_WHITE_BALLS:
+    correction: holm
+    tests: "69 two-sided exact binomial tests: count_i ~ Bin(n, 5/69) (exact marginal under the null; minlike two-sided p)"
+  F3_RED_BALLS:
+    correction: holm
+    tests: "26 two-sided exact binomial tests: count_j ~ Bin(n, 1/26)"
+  F4_PREDICTIVE:
+    correction: "single primary test; selection over M1..M3 calibrated by full-process null simulation"
+    tests: [P1_HOLDOUT_SELECTED_VS_M0]
+    secondary: [P2_BEST_OF_FULL_EVAL_VS_M0]
+
+confirmatory_evidence:
+  F1_F2_F3: "Holm-adjusted p <= family alpha on the frozen retrospective sample. Labelled RETROSPECTIVE_PREREGISTERED (data were public before the freeze); prospective draws required for any claim beyond the historical sample."
+  F4: "see backtest.decision"
+  not_evidence: ["EDA plots (hot/cold, overdue, odd/even, patterns) - OBSERVATIONAL ONLY", "nominal p-values without correction", "smoke-profile runs", "any analysis added after the freeze"]
+
+power:
+  sample_size_n: 1423
+  target_power: 0.80
+  scenarios:
+    white_bias_single: {kind: white_bias, balls: [0], deltas: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.5], tests: [G1_WHITE_FREQ, F2_target]}
+    white_bias_five:   {kind: white_bias, balls: [0, 13, 27, 41, 55], deltas: [0.0, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4], tests: [G1_WHITE_FREQ]}
+    red_bias_single:   {kind: red_bias, balls: [0], deltas: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.5], tests: [G2_RED_FREQ, F3_target]}
+    serial_persistence: {kind: serial, rhos: [0.0, 0.02, 0.04, 0.06, 0.08, 0.1, 0.12, 0.15, 0.2, 0.3], tests: [G3_WHITE_OVERLAP_LAGS, G6_WHITE_INDICATOR_AUTOCORR]}
+    drift_five:        {kind: drift, balls: [0, 13, 27, 41, 55], deltas: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.25, 1.5, 2.0], tests: [G9_WHITE_HOMOGENEITY]}
+  power_definition: "fraction of simulated histories in which the targeted hypothesis is rejected by the full Holm procedure of its family at the family alpha (post-multiplicity power)"
+  mde_definition: "smallest effect with estimated power >= 0.80, linear interpolation on the grid"
+
+injection_recovery:
+  source: results/power/power_full.json (effect at which preregistered post-Holm power >= 0.90, rounded up to 0.01)
+  predeclared_levels:
+    - {scenario: white_bias_single, kind: white_bias, balls: [0], delta: 0.58, test: F2_target}
+    - {scenario: white_bias_single, kind: white_bias, balls: [0], delta: 0.89, test: G1_WHITE_FREQ}
+    - {scenario: white_bias_five, kind: white_bias, balls: [0, 13, 27, 41, 55], delta: 0.40, test: G1_WHITE_FREQ}
+    - {scenario: red_bias_single, kind: red_bias, balls: [0], delta: 0.79, test: F3_target}
+    - {scenario: red_bias_single, kind: red_bias, balls: [0], delta: 1.05, test: G2_RED_FREQ}
+    - {scenario: serial_persistence, kind: serial, rho: 0.10, test: G3_WHITE_OVERLAP_LAGS}
+    - {scenario: serial_persistence, kind: serial, rho: 0.15, test: G6_WHITE_INDICATOR_AUTOCORR}
+    - {scenario: drift_five, kind: drift, balls: [0, 13, 27, 41, 55], delta: 1.23, test: G9_WHITE_HOMOGENEITY}
+  extra_targets_balls_note: "injection runs use different targeted balls (shifted by +7, mod W) and fresh seeds to avoid reusing the power-analysis draws"
+  pass_rule: "TPR at the predeclared level >= 0.80 for every scenario AND null FPR of each family <= its alpha + 3 MC standard errors AND experimentwise FPR <= 0.05 + 3 SE"
+
+backtest:
+  eligible_sequence: "eligible current-era draws in date order, indices 0..N-1 (N=1423)"
+  initial_window: 500
+  evaluation: "one-step-ahead for t = 500..N-1 (923 draws), each prediction uses only draws < t"
+  selection_period: "t = 500..1122 (623 draws)"
+  final_untouched_holdout: "t = 1123..1422 (300 draws)"
+  subperiods: "evaluation period split into 3 consecutive near-equal blocks"
+  models:
+    M0: {description: "exact uniform joint distribution", white_weights: uniform, red: uniform}
+    M1: {description: "Dirichlet-smoothed historical frequencies (all draws < t)", alpha_white: 1.0, alpha_red: 1.0}
+    M2: {description: "EWMA frequencies", half_life_draws: 100, alpha_white: 1.0, alpha_red: 1.0}
+    M3: {description: "rolling-window frequencies", window_draws: 200, alpha_white: 1.0, alpha_red: 1.0}
+  set_probability: "white weights -> successive weighted sampling without replacement; P(observed set) = sum over 120 orderings (log-sum-exp); red = normalised weights. Uniform weights give exactly 1/C(69,5)."
+  primary_metric: "joint log loss (nats) = -log P(white set) - log P(red); delta = model - M0 (negative favours model)"
+  secondary_metrics: [white_set_logloss, red_logloss, white_marginal_brier (sum_i (pi_i - y_i)^2, pi by MC 4000 samples, diagnostic), red_brier, n_white_hits_top5 (diagnostic only), calibration_reliability]
+  P1_HOLDOUT_SELECTED_VS_M0: "select model in {M1,M2,M3} with lowest mean joint log loss on the selection period; statistic = mean delta of the selected model on the holdout; p = fraction of >=1000 null histories (full process repeated: walk-forward, selection, holdout) with statistic <= observed (lower tail), +1 smoothing"
+  P2_BEST_OF_FULL_EVAL_VS_M0: "min over M1..M3 of mean delta on the whole evaluation period, calibrated by the same null histories (secondary)"
+  uncertainty: "moving-block bootstrap (block length 20, B per profile) CI for mean delta; MC CI for calibrated p"
+  decision:
+    INVALID_DATA_OR_METHOD: "G01 FAIL or G05 FAIL or anti-leakage invariance FAIL"
+    CANDIDATE_UNREPLICATED: "P1 p <= 0.01 AND mean delta < 0 in all 3 subperiods AND G05 PASS"
+    NO_DETECTABLE_EDGE: "not CANDIDATE AND preregistered predictive power at the reference alternative >= 0.80"
+    INCONCLUSIVE_LOW_POWER: "not CANDIDATE AND predictive power at the reference alternative < 0.80"
+    CONFIRMED_PROSPECTIVE_EDGE: "never assigned automatically; requires prospective_registry results on >= 300 draws registered before they occurred, one-sided test of the frozen selected model vs M0 at alpha 0.01"
+  predictive_reference_alternative: {kind: white_bias, balls: [0, 13, 27, 41, 55], delta: 0.38, rationale: "white_bias_five at its omnibus MDE80 (0.370, rounded up): the smallest uniformity-detectable effect; predictive power of P1 estimated with backtest_null_histories under it"}
+
+prospective:
+  registry: results/prospective/prospective_registry.jsonl
+  rule: "each record hashed and timestamped (UTC) before the draw date; scored only after official publication"
+  min_draws_for_confirmation: 300
+
+deep_learning:
+  status: EXPLORATORY_ONLY
+  gate: "not before G04, G05, G06 PASS; never on the holdout used for selection"
